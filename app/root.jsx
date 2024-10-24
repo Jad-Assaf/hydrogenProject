@@ -1,5 +1,9 @@
-import {useNonce, getShopAnalytics, Analytics} from '@shopify/hydrogen';
-import {defer} from '@shopify/remix-oxygen';
+import {
+  useNonce,
+  getShopAnalytics,
+  Analytics,
+} from '@shopify/hydrogen'
+import { defer } from '@shopify/remix-oxygen'
 import {
   Links,
   Meta,
@@ -9,12 +13,12 @@ import {
   useRouteLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
-} from '@remix-run/react';
-import favicon from '~/assets/favicon.svg';
-import resetStyles from '~/styles/reset.css?url';
-import appStyles from '~/styles/app.css?url';
-import {PageLayout} from '~/components/PageLayout';
-import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
+} from '@remix-run/react'
+import favicon from '~/assets/favicon.svg'
+import resetStyles from '../styles/reset.css?url'
+import appStyles from '../styles/app.css?url'
+import { PageLayout } from '~/components/PageLayout'
+import { FOOTER_QUERY, HEADER_QUERY } from '~/lib/fragments'
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -27,18 +31,19 @@ export const shouldRevalidate = ({
   defaultShouldRevalidate,
 }) => {
   // revalidate when a mutation is performed e.g add to cart, login...
-  if (formMethod && formMethod !== 'GET') return true;
+  if (formMethod && formMethod !== 'GET') return true
 
   // revalidate when manually revalidating via useRevalidator
-  if (currentUrl.toString() === nextUrl.toString()) return true;
+  if (currentUrl.toString() === nextUrl.toString())
+    return true
 
-  return defaultShouldRevalidate;
-};
+  return defaultShouldRevalidate
+}
 
 export function links() {
   return [
-    {rel: 'stylesheet', href: resetStyles},
-    {rel: 'stylesheet', href: appStyles},
+    { rel: 'stylesheet', href: resetStyles },
+    { rel: 'stylesheet', href: appStyles },
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
@@ -47,8 +52,8 @@ export function links() {
       rel: 'preconnect',
       href: 'https://shop.app',
     },
-    {rel: 'icon', type: 'image/svg+xml', href: favicon},
-  ];
+    { rel: 'icon', type: 'image/svg+xml', href: favicon },
+  ]
 }
 
 /**
@@ -56,12 +61,12 @@ export function links() {
  */
 export async function loader(args) {
   // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
+  const deferredData = loadDeferredData(args)
 
   // Await the critical data required to render initial state of the page
-  const criticalData = await loadCriticalData(args);
+  const criticalData = await loadCriticalData(args)
 
-  const {storefront, env} = args.context;
+  const { storefront, env } = args.context
 
   return defer({
     ...deferredData,
@@ -73,13 +78,14 @@ export async function loader(args) {
     }),
     consent: {
       checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+      storefrontAccessToken:
+        env.PUBLIC_STOREFRONT_API_TOKEN,
       withPrivacyBanner: true,
       // localize the privacy banner
       country: args.context.storefront.i18n.country,
       language: args.context.storefront.i18n.language,
     },
-  });
+  })
 }
 
 /**
@@ -87,8 +93,8 @@ export async function loader(args) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  * @param {LoaderFunctionArgs}
  */
-async function loadCriticalData({context}) {
-  const {storefront} = context;
+async function loadCriticalData({ context }) {
+  const { storefront } = context
 
   const [header] = await Promise.all([
     storefront.query(HEADER_QUERY, {
@@ -98,9 +104,9 @@ async function loadCriticalData({context}) {
       },
     }),
     // Add other queries here, so that they are loaded in parallel
-  ]);
+  ])
 
-  return {header};
+  return { header }
 }
 
 /**
@@ -109,8 +115,8 @@ async function loadCriticalData({context}) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  * @param {LoaderFunctionArgs}
  */
-function loadDeferredData({context}) {
-  const {storefront, customerAccount, cart} = context;
+function loadDeferredData({ context }) {
+  const { storefront, customerAccount, cart } = context
 
   // defer the footer query (below the fold)
   const footer = storefront
@@ -122,29 +128,32 @@ function loadDeferredData({context}) {
     })
     .catch((error) => {
       // Log query errors, but don't throw them so the page can still render
-      console.error(error);
-      return null;
-    });
+      console.error(error)
+      return null
+    })
   return {
     cart: cart.get(),
     isLoggedIn: customerAccount.isLoggedIn(),
     footer,
-  };
+  }
 }
 
 /**
  * @param {{children?: React.ReactNode}}
  */
-export function Layout({children}) {
-  const nonce = useNonce();
+export function Layout({ children }) {
+  const nonce = useNonce()
   /** @type {RootLoader} */
-  const data = useRouteLoaderData('root');
+  const data = useRouteLoaderData('root')
 
   return (
-    <html lang="en">
+    <html lang='en'>
       <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta charSet='utf-8' />
+        <meta
+          name='viewport'
+          content='width=device-width,initial-scale=1'
+        />
         <Meta />
         <Links />
       </head>
@@ -164,27 +173,27 @@ export function Layout({children}) {
         <Scripts nonce={nonce} />
       </body>
     </html>
-  );
+  )
 }
 
 export default function App() {
-  return <Outlet />;
+  return <Outlet />
 }
 
 export function ErrorBoundary() {
-  const error = useRouteError();
-  let errorMessage = 'Unknown error';
-  let errorStatus = 500;
+  const error = useRouteError()
+  let errorMessage = 'Unknown error'
+  let errorStatus = 500
 
   if (isRouteErrorResponse(error)) {
-    errorMessage = error?.data?.message ?? error.data;
-    errorStatus = error.status;
+    errorMessage = error?.data?.message ?? error.data
+    errorStatus = error.status
   } else if (error instanceof Error) {
-    errorMessage = error.message;
+    errorMessage = error.message
   }
 
   return (
-    <div className="route-error">
+    <div className='route-error'>
       <h1>Oops</h1>
       <h2>{errorStatus}</h2>
       {errorMessage && (
@@ -193,7 +202,7 @@ export function ErrorBoundary() {
         </fieldset>
       )}
     </div>
-  );
+  )
 }
 
 /** @typedef {LoaderReturnData} RootLoader */
